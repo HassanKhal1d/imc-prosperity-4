@@ -1,5 +1,24 @@
-## Prosperity 3 | #1 Global Winners
+## Prosperity 3 | #1 Global Winners | Hisenberg
 
-#### Operational Strategy
+- **Skill Diversification:** Had a python expert that developed Backtesters, Automated Script Submitter, Hyperparameter Optimization tool. Also had people with strong financial intuition.
+  
+- **Commitment:** Team went all in, sacrificing sleep, uni classes etc
+  
+- **Algo Trading Strategies:** For **volatile products**, they avoided market making and focused on identifying large spike via EMA for FV and Bollinger bands where the focus was on mean reversion when a spike was idenified. They also maintained a lean near 0 position to avoid holding the asset and be exposed to inventory risk. For **ETF or Basket products** they used statistical Arb on the spread between the basket and it's components, where they applied a Leaf-based position sizing model. This position sizing model scaled up their position size as the spread widened and exited gradually as the spread converged. For **Short-term Options** they utilized Black Scholes intuition to trade IV by regressing the moneyness of options against their IVs. The goal was to identify the FV curve: this would allow them to short options that were above this curve and long options that were below the curve. They applied a mean reversion strategy for **ATM Options** (Strike prive at 10k sea shells) where they observed IV fluctuated within a specific band. If the underlying moved significantly bt the option IV didn't react propotionally, they traded the divergence, betting the IV would revert to its mean.
+  
+- **Delta Hedging:** To avoid losing money in adverse underlying movements, they hedged their **Delta**. They did find that full hedging at all their profits due to the **bid-ask spread**, to solve this they purposefully chose to under hedge (keep some delta exposure) but keep total position sizes low.
 
-- 
+- **Gamma & Vol Risk:** They realized that being "Short Gamma" (selling options) was extremely risky during "gap moves" (sudden large price jumps). While some teams "gambled" by shorting every option to collect premium, the winners focused on risk management, avoiding large Short Gamma positions that could lead to massive overnight drawdowns.
+
+- **Avoiding Over Optimization:** Instead of letting a script automatically tune parameters, they manually adjusted their strategy settings. This allowed them to react to "regime shifts"—moments where the market's behavior changed fundamentally.
+
+- **Intrinsic vs Extrinsic Value:** As the options approached expiry, the "extrinsic value" (time value) decayed. They monitored this closely to understand how much "juice" was left in the trade versus the risk of holding it. The moderator shared an anecdote about a specific round where the underlying asset had a massive price gap. Many participants lost money because they were Short Gamma (they had sold options and the delta moved against them faster than they could hedge). The winners were successful because they performed a post-drawdown analysis to understand "what went wrong" rather than just trying to "fix" the P&L, leading them to be more cautious with Gamma risk in final rounds.
+
+- **Multi-Exchange Arbitrage:** The core of the strategy was exploiting price differences between a local exchange and a remote exchange (referred to as the "Archipelago"). For **Edge Calculations** The teams calculated an "implied ask" and "implied bid" by taking the remote exchange's prices and adjusting them for import/export tariffs and transport frictions. While **Execution**, They sold on the local bid if it was higher than the implied ask plus a specific edge, and vice versa for buying. They looked for **hidden liquidity** by not just undercutting the visible bid/ask by one unit, but by finding optimal price levels that would attract and trigger market orders from other participants. They applied **Sophisticated Risk Allocation** instead of a single "all-in" strategy, they partitioned their trading into two distinct sub-strategies; **Arbitrage Inventory** where a specific portion of their risk limit was dedicated purely to the exchange-based arbitrage, and **Directional Inventory** where a separate portion of their inventory was allocated for taking positions based on the predictive sunlight signals. 
+  
+- **Predictive Alpha in Alt Data:** The round included external data feeds (Sunlight Index and Sugar prices) that served as leading indicators for the product's price (Macarons). By applying **Sunlight Forecasting** they successfully forecasted the Sunlight Index up to 500 timestamps ahead. This allowed them to identify a critical index level (around 50-55); if the sunlight was predicted to cross this threshold, they knew the Macaron prices would likely shift. However when it came to using the sunlight forecasting as a **Sugar Signal**, they found high correlations with sunlight, they noted that the "Sugar" signal was much harder to forecast and was not heavily relied upon to avoid "gambling" on noisy data. 
+
+## Prosperity 3 | #2 Global Winners | Frankfurt Hedgehogs
+
+
+
