@@ -8,12 +8,12 @@ POSITION_LIMIT   = 80
 SKEW_TRIGGER     = 30        
 HARD_HALT        = 60       
 
-# EMERALDS
+
 EM_FAIR_VALUE    = 10_000    
 EM_QUOTE_NORMAL  = 8         
 EM_QUOTE_NARROW  = 0         
 
-# TOMATOES
+
 TOM_EMA_SPAN     = 9         
 TOM_ALPHA        = 2 / (TOM_EMA_SPAN + 1)
 TOM_QUOTE_OFFSET = 5         
