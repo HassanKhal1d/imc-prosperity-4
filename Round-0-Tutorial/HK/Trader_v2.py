@@ -10,7 +10,7 @@ HARD_CLOSE_TS    = 199000
 
 
 EM_FV            = 10000
-EM_INSIDE        = 1       
+EM_INSIDE        = 7       
                            
 EM_SKEW_TRIGGER  = 20       
 EM_SKEW_STEP     = 1       
