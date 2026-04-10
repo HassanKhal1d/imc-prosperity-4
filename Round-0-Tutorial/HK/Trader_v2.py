@@ -12,9 +12,9 @@ HARD_CLOSE_TS    = 199000
 EM_FV            = 10000
 EM_INSIDE        = 7       
                            
-EM_SKEW_TRIGGER  = 20       
+EM_SKEW_TRIGGER  = 30       
 EM_SKEW_STEP     = 1       
-EM_HARD_HALT     = 50     
+EM_HARD_HALT     = 60     
 
 TOM_EMA_SPAN     = 9
 TOM_ALPHA        = 2 / (TOM_EMA_SPAN + 1)
