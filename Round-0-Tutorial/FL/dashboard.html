@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CWFA Dashboard · IMC Prosperity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070C18;--sf:#0D1526;--sf2:#12213A;--br:#1C2E4A;
+  --tx:#D8E4F4;--mt:#4A6280;--lm:#7A90B8;
+  --bl:#3B9EFF;--gn:#34D399;--am:#FBBF24;--rd:#F87171;--cy:#22D3EE;
+  --fn:'Syne',sans-serif;--fm:'IBM Plex Mono',monospace
+}
+html,body{background:var(--bg);color:var(--tx);font-family:var(--fn);font-size:14px;line-height:1.5;min-height:100vh}
+a{color:var(--bl);text-decoration:none}
+.page{max-width:1280px;margin:0 auto}
+
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1.5rem;border-bottom:1px solid var(--br);background:var(--sf);gap:1rem;flex-wrap:wrap}
+.hd-left{display:flex;align-items:baseline;gap:.75rem}
+.hd-left h1{font-size:1rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.hd-left span{font-family:var(--fm);font-size:.65rem;color:var(--mt)}
+.hd-right{display:flex;align-items:center;gap:.5rem}
+#run-date{font-family:var(--fm);font-size:.65rem;color:var(--mt)}
+.btn{background:transparent;border:1px solid var(--br);color:var(--tx);font-family:var(--fn);font-size:.75rem;padding:.35rem .75rem;cursor:pointer;border-radius:3px;transition:.15s}
+.btn:hover{border-color:var(--bl);color:var(--bl)}
+#file-input{display:none}
+
+/* META BAR */
+.meta{display:flex;flex-wrap:wrap;gap:.25rem 1.5rem;padding:.4rem 1.5rem;background:var(--sf);border-bottom:1px solid var(--br);font-family:var(--fm);font-size:.65rem;color:var(--mt)}
+.meta b{color:var(--lm);font-weight:500}
+
+/* STATS STRIP */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);background:var(--br);gap:1px;border-bottom:1px solid var(--br)}
+.stat{background:var(--sf);padding:1rem 1.25rem}
+.stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.09em;color:var(--mt);margin-bottom:.3rem}
+.stat-val{font-family:var(--fm);font-size:1.75rem;font-weight:500;line-height:1}
+.stat-sub{font-size:.65rem;color:var(--mt);margin-top:.3rem;font-family:var(--fm)}
+.c-gn{color:var(--gn)}.c-am{color:var(--am)}.c-bl{color:var(--bl)}.c-rd{color:var(--rd)}
+.cdots{display:flex;gap:3px;margin-top:.4rem}
+.cdot{width:8px;height:8px;border-radius:50%;background:var(--gn)}
+.cdot.e{background:var(--sf2);border:1px solid var(--br)}
+
+/* CAUTION NOTE */
+.note{background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.18);border-left:3px solid var(--am);padding:.6rem 1rem;font-size:.68rem;color:var(--am);line-height:1.6;margin:0}
+.note strong{font-weight:500}
+
+/* MAIN GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;background:var(--br);gap:1px}
+.panel{background:var(--sf);padding:1.25rem}
+.ptitle{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mt);margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between}
+.ptitle-note{font-family:var(--fm);font-size:.6rem;color:var(--mt);text-transform:none;letter-spacing:0;opacity:.7}
+.cw{position:relative;width:100%}
+
+/* STRIP PLOT */
+.strip-wrap{position:relative;height:60px;margin:1.25rem 0 .25rem}
+.strip-axis{position:absolute;bottom:20px;left:0;right:0;height:1px;background:var(--br)}
+.strip-range{position:absolute;bottom:18px;height:5px;background:rgba(52,211,153,.12);border-radius:2px}
+.strip-mean{position:absolute;bottom:14px;width:2px;height:13px;background:var(--gn);transform:translateX(-50%)}
+.strip-dot{position:absolute;bottom:14px;width:10px;height:10px;border-radius:50%;background:var(--bl);border:1.5px solid #070C18;transform:translateX(-50%);cursor:pointer;transition:.1s;z-index:2}
+.strip-dot:hover{background:var(--cy);transform:translateX(-50%) scale(1.3)}
+.strip-labels{display:flex;justify-content:space-between;font-family:var(--fm);font-size:.6rem;color:var(--mt)}
+.strip-legend{display:flex;gap:1rem;font-family:var(--fm);font-size:.62rem;color:var(--mt);margin-top:.3rem}
+.sl-item{display:flex;align-items:center;gap:.3rem}
+.sl-dot{width:8px;height:8px;border-radius:50%;background:var(--bl)}
+.sl-line{width:14px;height:2px;background:var(--gn)}
+
+/* HEATMAP */
+.hm-outer{overflow-x:auto}
+.hm-table{border-collapse:separate;border-spacing:3px;width:100%;margin-top:.25rem}
+.hm-table th{font-family:var(--fm);font-size:.6rem;color:var(--mt);padding:.25rem .4rem;text-align:center;font-weight:400}
+.hm-table th.rh{text-align:right;font-size:.58rem}
+.hm-cell{padding:.45rem .5rem;border-radius:3px;text-align:center;font-family:var(--fm);font-size:.7rem;cursor:default;border:1px solid transparent;min-width:60px}
+.hm-cell.f0{background:var(--sf2);color:var(--mt);border-color:var(--br)}
+.hm-cell.fhi{background:rgba(59,158,255,.14);color:var(--bl);border-color:rgba(59,158,255,.4);font-weight:500}
+.hm-cell.cur{border-color:var(--am);box-shadow:0 0 0 1px var(--am)}
+.hm-legend{display:flex;gap:1rem;font-family:var(--fm);font-size:.6rem;color:var(--mt);margin-top:.75rem}
+.hl-item{display:flex;align-items:center;gap:.3rem}
+.hl-box{width:10px;height:10px;border-radius:2px}
+
+/* RECOMMENDATIONS */
+.rec-intro{font-size:.73rem;color:var(--lm);line-height:1.65;margin-bottom:1rem;padding-left:.75rem;border-left:2px solid var(--br)}
+.rec-row{display:flex;align-items:center;justify-content:space-between;padding:.7rem 0;border-bottom:1px solid rgba(28,46,74,.5)}
+.rec-row:last-child{border-bottom:none}
+.rec-param{font-family:var(--fm);font-size:.7rem;color:var(--mt)}
+.rec-vals{display:flex;align-items:center;gap:.55rem;font-family:var(--fm);font-size:.82rem}
+.rv-cur{color:var(--am);text-decoration:line-through;opacity:.6}
+.rv-arr{color:var(--mt)}
+.rv-new{color:var(--gn);font-weight:500}
+.rv-same{color:var(--lm)}
+.badge{display:inline-flex;align-items:center;font-size:.56rem;padding:.1rem .3rem;border-radius:2px;text-transform:uppercase;letter-spacing:.04em;margin-left:.35rem}
+.b-stable{background:rgba(52,211,153,.1);color:var(--gn);border:1px solid rgba(52,211,153,.22)}
+.b-var{background:rgba(251,191,36,.1);color:var(--am);border:1px solid rgba(251,191,36,.22)}
+
+/* TABLE */
+.tbl-section{background:var(--sf);padding:1.25rem 1.5rem;border-top:1px solid var(--br)}
+.tbl-wrap{overflow-x:auto;margin-top:.75rem}
+table{width:100%;border-collapse:collapse;font-family:var(--fm);font-size:.72rem}
+th{text-align:left;padding:.4rem .6rem;color:var(--mt);font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--br);font-weight:400;white-space:nowrap}
+td{padding:.4rem .6rem;border-bottom:1px solid rgba(28,46,74,.4);vertical-align:middle;white-space:nowrap}
+tr:hover td{background:var(--sf2)}
+.chip{display:inline-block;padding:.1rem .35rem;border-radius:2px;font-size:.68rem;border:1px solid transparent}
+.chip-is{background:rgba(59,130,246,.08);color:#93C5FD;border-color:rgba(59,130,246,.2)}
+.chip-oos{background:rgba(52,211,153,.08);color:var(--gn);border-color:rgba(52,211,153,.2)}
+.chip-oos.hi{background:rgba(52,211,153,.18);color:#6EE7B7;border-color:rgba(52,211,153,.35)}
+.ptag{display:inline-block;background:var(--sf2);border:1px solid var(--br);border-radius:2px;padding:.07rem .28rem;font-size:.62rem;color:var(--tx);margin:.1rem .1rem 0 0}
+.blk{display:inline-flex;width:17px;height:17px;border-radius:2px;align-items:center;justify-content:center;font-size:.58rem;font-weight:500;margin:.1rem}
+.blk-is{background:rgba(59,130,246,.12);color:#93C5FD;border:1px solid rgba(59,130,246,.25)}
+.blk-oos{background:rgba(52,211,153,.08);color:var(--gn);border:1px solid rgba(52,211,153,.22)}
+.dp{color:var(--gn)}.dn{color:var(--rd)}.dz{color:var(--mt)}
+
+/* FOOTER */
+footer{padding:.75rem 1.5rem;border-top:1px solid var(--br);display:flex;justify-content:space-between;font-size:.62rem;color:var(--mt);font-family:var(--fm);background:var(--sf);flex-wrap:wrap;gap:.5rem}
+
+@media(max-width:900px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .grid{grid-template-columns:1fr}
+  .stat-val{font-size:1.4rem}
+}
+@media(max-width:500px){
+  .stats{grid-template-columns:1fr 1fr}
+  header,.panel,.tbl-section{padding:.9rem 1rem}
+  .meta{padding:.4rem 1rem}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="hd-left">
+    <h1>CWFA Dashboard</h1>
+    <span>Combinatorial Walk-Forward Analysis · IMC Prosperity</span>
+  </div>
+  <div class="hd-right">
+    <span id="run-date"></span>
+    <button class="btn" onclick="document.getElementById('file-input').click()">&#8599; Load JSON</button>
+    <input type="file" id="file-input" accept=".json">
+  </div>
+</header>
+
+<div class="meta" id="meta-bar"></div>
+<div class="stats" id="stats-strip"></div>
+<div class="note" id="caution-note" style="display:none;padding:.6rem 1.5rem"></div>
+
+<div class="grid">
+
+  <div class="panel">
+    <div class="ptitle">IS &rarr; OOS transfer <span class="ptitle-note">points near diagonal = good generalisation</span></div>
+    <div class="cw" style="height:290px">
+      <canvas id="scatter-chart" role="img" aria-label="Scatter plot of in-sample vs out-of-sample Sharpe scores per CWFA combination with y=x reference line.">IS vs OOS Sharpe scores per CWFA combination.</canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">OOS score distribution <span class="ptitle-note">each dot = one combination path</span></div>
+    <div id="strip-container"></div>
+    <div class="cw" style="height:185px;margin-top:.75rem">
+      <canvas id="dist-chart" role="img" aria-label="Bar chart of sorted out-of-sample Sharpe scores with mean reference line.">OOS Sharpe score distribution.</canvas>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">Parameter selection frequency <span class="ptitle-note"><span style="color:var(--am)">■</span> current &nbsp;<span style="color:var(--bl)">■</span> IS winner</span></div>
+    <div class="hm-outer"><div id="heatmap"></div></div>
+    <div class="hm-legend" id="hm-legend"></div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">Recommended changes</div>
+    <p class="rec-intro" id="rec-intro"></p>
+    <div id="rec-rows"></div>
+  </div>
+
+</div>
+
+<div class="tbl-section">
+  <div class="ptitle">All combination results</div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>OOS blocks</th><th>IS blocks</th>
+          <th>Best params (IS)</th><th>IS score</th><th>OOS score</th><th>Delta</th>
+        </tr>
+      </thead>
+      <tbody id="result-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<footer>
+  <span>CWFA Dashboard &middot; <a href="https://github.com" target="_blank">GitHub</a> &middot; Load a new JSON after each round to update all charts</span>
+  <span id="footer-right"></span>
+</footer>
+
+</div>
+
+<script>
+const DEMO = {"metadata":{"run_date":"2026-04-13T20:39:46","K":4,"p":2,"purge":false,"objective":"sharpe","products":["TOMATOES"],"param_grid":{"TOM_SKEW_TRIGGER":[15,20,25,30],"TOM_VELOCITY_THR":[2.5,3.5,5.0]},"current_params":{"TOM_SKEW_TRIGGER":25,"TOM_VELOCITY_THR":3.5},"n_is_combos":12},"summary":{"n_combos_run":6,"oos_scores":[2.3514,2.3214,2.3447,2.3927,2.379,2.4109],"oos_mean":2.3667,"oos_std":0.0304,"oos_sharpe_proxy":77.81,"recommended_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"consensus_rate":1.0},"combo_results":[{"combo_id":0,"oos_blocks":[0,1],"is_blocks":[2,3],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.4109,"oos_score":2.3514},{"combo_id":1,"oos_blocks":[0,2],"is_blocks":[3],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.379,"oos_score":2.3214},{"combo_id":2,"oos_blocks":[0,3],"is_blocks":[1,2],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.3927,"oos_score":2.3447},{"combo_id":3,"oos_blocks":[1,2],"is_blocks":[0,3],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.3447,"oos_score":2.3927},{"combo_id":4,"oos_blocks":[1,3],"is_blocks":[0,2],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.3214,"oos_score":2.379},{"combo_id":5,"oos_blocks":[2,3],"is_blocks":[0,1],"best_params":{"TOM_SKEW_TRIGGER":15,"TOM_VELOCITY_THR":5.0},"is_score":2.3514,"oos_score":2.4109}],"param_frequency":{"TOM_SKEW_TRIGGER=15,TOM_VELOCITY_THR=5.0":6},"param_stability":{"TOM_SKEW_TRIGGER":{"values":[15,15,15,15,15,15],"mean":15.0,"std":0.0,"unique":[15],"stable":true},"TOM_VELOCITY_THR":{"values":[5.0,5.0,5.0,5.0,5.0,5.0],"mean":5.0,"std":0.0,"unique":[5.0],"stable":true}}};
+
+let scatterChart=null, distChart=null;
+
+function renderAll(d){
+  const m=d.metadata, s=d.summary, combos=d.combo_results||[];
+  const cur=m.current_params||{}, rec=s.recommended_params||{};
+  const scores=s.oos_scores||[];
+  const freq=d.param_frequency||{};
+  const stability=d.param_stability||{};
+
+  // run date
+  try{
+    const dt=new Date(m.run_date);
+    document.getElementById('run-date').textContent=dt.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }catch(e){}
+
+  // meta bar
+  document.getElementById('meta-bar').innerHTML=
+    `<span>Products <b>${(m.products||[]).join(', ')}</b></span>`+
+    `<span>K=<b>${m.K}</b> p=<b>${m.p}</b></span>`+
+    `<span>Purge <b>${m.purge?'on':'off'}</b></span>`+
+    `<span>Objective <b>${m.objective}</b></span>`+
+    `<span>IS combos <b>${m.n_is_combos}</b></span>`+
+    `<span>OOS paths <b>${s.n_combos_run}</b></span>`;
+
+  // verdict
+  const consRate=s.consensus_rate||0;
+  const nCons=Math.round(consRate*s.n_combos_run);
+  const cv=(s.oos_std)/(Math.abs(s.oos_mean)||1);
+  let verdict, vcol;
+  if(consRate>=1&&cv<.02){verdict='Robust';vcol='c-gn';}
+  else if(consRate>=.67&&cv<.05){verdict='Moderate';vcol='c-am';}
+  else{verdict='Caution';vcol='c-rd';}
+
+  // stats strip
+  const dots=[...Array(s.n_combos_run)].map((_,i)=>`<div class="cdot${i<nCons?'':' e'}"></div>`).join('');
+  document.getElementById('stats-strip').innerHTML=`
+    <div class="stat">
+      <div class="stat-label">OOS mean Sharpe</div>
+      <div class="stat-val c-gn">${s.oos_mean.toFixed(4)}</div>
+      <div class="stat-sub">across ${s.n_combos_run} OOS paths</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">OOS std dev</div>
+      <div class="stat-val ${cv<.02?'c-gn':cv<.05?'c-am':'c-rd'}">${s.oos_std.toFixed(4)}</div>
+      <div class="stat-sub">CV ${(cv*100).toFixed(1)}% &middot; ${cv<.02?'tight distribution':cv<.05?'moderate spread':'high variance'}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Parameter consensus</div>
+      <div class="stat-val ${consRate>=1?'c-gn':consRate>=.67?'c-am':'c-rd'}">${nCons}/${s.n_combos_run}</div>
+      <div class="cdots">${dots}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Robustness verdict</div>
+      <div class="stat-val ${vcol}">${verdict}</div>
+      <div class="stat-sub">${verdict==='Robust'?'stable across all windows':verdict==='Moderate'?'generally consistent':'mixed — review carefully'}</div>
+    </div>`;
+
+  // caution note
+  const cn=document.getElementById('caution-note');
+  cn.style.display='block';
+  cn.innerHTML='<strong>Fill model note &mdash;</strong> Results use a block-fill backtester (~30&times; volume vs real exchange). Absolute Sharpe values are inflated — only <em>relative rankings</em> between parameter sets are meaningful. Treat recommendations as directional signals, not exact targets.';
+
+  // scatter chart
+  if(scatterChart){scatterChart.destroy();scatterChart=null;}
+  const isArr=combos.map(c=>c.is_score), oosArr=combos.map(c=>c.oos_score);
+  const allV=[...isArr,...oosArr], vMin=Math.min(...allV)-.012, vMax=Math.max(...allV)+.012;
+  scatterChart=new Chart(document.getElementById('scatter-chart'),{
+    type:'scatter',
+    data:{datasets:[
+      {type:'line',data:[{x:vMin,y:vMin},{x:vMax,y:vMax}],borderColor:'rgba(74,98,128,.45)',borderWidth:1,borderDash:[5,4],pointRadius:0,fill:false,tension:0,label:'y = x'},
+      {type:'scatter',data:combos.map(c=>({x:c.is_score,y:c.oos_score,id:c.combo_id})),
+        backgroundColor:'#3B9EFF',borderColor:'#070C18',borderWidth:1.5,pointRadius:6,pointHoverRadius:8,label:'combination'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{min:vMin,max:vMax,title:{display:true,text:'IS Sharpe',color:'#4A6280',font:{family:'IBM Plex Mono',size:10}},
+          ticks:{color:'#4A6280',font:{family:'IBM Plex Mono',size:9},callback:v=>v.toFixed(3)},
+          grid:{color:'rgba(28,46,74,.55)'},border:{color:'rgba(28,46,74,.55)'}},
+        y:{min:vMin,max:vMax,title:{display:true,text:'OOS Sharpe',color:'#4A6280',font:{family:'IBM Plex Mono',size:10}},
+          ticks:{color:'#4A6280',font:{family:'IBM Plex Mono',size:9},callback:v=>v.toFixed(3)},
+          grid:{color:'rgba(28,46,74,.55)'},border:{color:'rgba(28,46,74,.55)'}}
+      },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>{
+          if(ctx.datasetIndex===0)return null;
+          const p=ctx.raw,d=p.y-p.x;
+          return[`Combo ${p.id}`,`IS: ${p.x.toFixed(4)}  OOS: ${p.y.toFixed(4)}`,`${d>=0?'+':''}${d.toFixed(4)} vs diagonal`];
+        }},backgroundColor:'#0D1526',borderColor:'#1C2E4A',borderWidth:1,titleColor:'#D8E4F4',bodyColor:'#7A90B8',padding:9,cornerRadius:3}
+      }
+    }
+  });
+
+  // strip plot
+  if(scores.length>0){
+    const sMin=Math.min(...scores),sMax=Math.max(...scores),sMean=s.oos_mean,sStd=s.oos_std;
+    const pad=.004,sLo=sMin-pad,sHi=sMax+pad,sRng=sHi-sLo;
+    const pct=v=>((v-sLo)/sRng*100).toFixed(2)+'%';
+    const meanPct=((sMean-sLo)/sRng*100).toFixed(2)+'%';
+    const lo=Math.max(sLo,sMean-sStd),hi=Math.min(sHi,sMean+sStd);
+    const rng=`left:${((lo-sLo)/sRng*100).toFixed(2)}%;width:${((hi-lo)/sRng*100).toFixed(2)}%`;
+    const dotsHtml=scores.map((sc,i)=>`<div class="strip-dot" title="Combo ${combos[i]?combos[i].combo_id:i}: ${sc.toFixed(4)}" style="left:${pct(sc)}"></div>`).join('');
+    document.getElementById('strip-container').innerHTML=`
+      <div class="strip-wrap">
+        <div class="strip-axis"></div>
+        <div class="strip-range" style="${rng}"></div>
+        <div class="strip-mean" style="left:${meanPct}"></div>
+        ${dotsHtml}
+      </div>
+      <div class="strip-labels"><span>${sLo.toFixed(3)}</span><span>mean ${sMean.toFixed(4)}</span><span>${sHi.toFixed(3)}</span></div>
+      <div class="strip-legend">
+        <div class="sl-item"><div class="sl-dot"></div>${scores.length} combos</div>
+        <div class="sl-item"><div class="sl-line"></div>mean ± 1σ</div>
+      </div>`;
+  }
+
+  // distribution bar chart
+  if(distChart){distChart.destroy();distChart=null;}
+  const sorted=[...scores].map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+  const sMean=s.oos_mean,sStd=s.oos_std;
+  distChart=new Chart(document.getElementById('dist-chart'),{
+    type:'bar',
+    data:{
+      labels:sorted.map((_,i)=>`#${i+1}`),
+      datasets:[
+        {label:'OOS Sharpe',data:sorted.map(x=>parseFloat(x.v.toFixed(4))),
+          backgroundColor:sorted.map(x=>x.v>=sMean?'rgba(52,211,153,.45)':'rgba(59,158,255,.4)'),
+          borderColor:sorted.map(x=>x.v>=sMean?'#34D399':'#3B9EFF'),
+          borderWidth:1,borderRadius:2},
+        {type:'line',label:'mean',data:sorted.map(()=>sMean),
+          borderColor:'rgba(52,211,153,.55)',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{
+        x:{ticks:{color:'#4A6280',font:{family:'IBM Plex Mono',size:9}},grid:{color:'rgba(28,46,74,.5)'},border:{color:'rgba(28,46,74,.55)'}},
+        y:{min:parseFloat((sMean-sStd*4).toFixed(3)),
+          ticks:{color:'#4A6280',font:{family:'IBM Plex Mono',size:9},callback:v=>v.toFixed(3)},
+          grid:{color:'rgba(28,46,74,.5)'},border:{color:'rgba(28,46,74,.55)'}}
+      },
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:c=>`OOS: ${c.raw.toFixed(4)}`},backgroundColor:'#0D1526',borderColor:'#1C2E4A',borderWidth:1,titleColor:'#D8E4F4',bodyColor:'#7A90B8',cornerRadius:3}
+      }
+    }
+  });
+
+  // heatmap
+  const pg=m.param_grid||{};
+  const pgKeys=Object.keys(pg);
+  const maxFreq=Math.max(...Object.values(freq),1);
+  if(pgKeys.length>=2){
+    const [rk,ck]=[pgKeys[0],pgKeys[1]];
+    const rv=pg[rk],cv=pg[ck];
+    const crv=cur[rk],ccv=cur[ck];
+    let h=`<table class="hm-table"><thead><tr><th class="rh">${rk.replace('TOM_','')}</th>`;
+    cv.forEach(c=>{h+=`<th>${ck.replace('TOM_','')}=${c}</th>`;});
+    h+=`</tr></thead><tbody>`;
+    rv.forEach(r=>{
+      h+=`<tr><th class="rh">${r}</th>`;
+      cv.forEach(c=>{
+        const key=`${rk}=${r},${ck}=${c}`;
+        const f=freq[key]||0;
+        const isCur=(r==crv&&c==ccv);
+        const cls=(f>=maxFreq&&f>0?'fhi':'f0')+(isCur?' cur':'');
+        h+=`<td class="hm-cell ${cls}" title="${rk}=${r}, ${ck}=${c}: won IS ${f}/${s.n_combos_run}">${f>0?`${f}/${s.n_combos_run}`:isCur?'cur':'—'}</td>`;
+      });
+      h+=`</tr>`;
+    });
+    h+=`</tbody></table>`;
+    document.getElementById('heatmap').innerHTML=h;
+    document.getElementById('hm-legend').innerHTML=`
+      <div class="hl-item"><div class="hl-box" style="background:rgba(59,158,255,.14);border:1px solid rgba(59,158,255,.4)"></div>IS winner</div>
+      <div class="hl-item"><div class="hl-box" style="background:var(--sf2);border:1px solid var(--am)"></div>current params</div>
+      <div class="hl-item"><div class="hl-box" style="background:var(--sf2);border:1px solid var(--br)"></div>not selected</div>`;
+  }
+
+  // recommendations
+  const allP=[...new Set([...Object.keys(cur),...Object.keys(rec)])];
+  const n=s.n_combos_run;
+  document.getElementById('rec-intro').textContent=`${nCons}/${n} IS windows agreed on the same parameters. Changes below were recommended consistently across all combinations.`;
+  let rh='';
+  allP.forEach(p=>{
+    const cv2=cur[p],rv=rec[p];
+    const st=stability[p];
+    const changed=cv2!==undefined&&rv!==undefined&&String(cv2)!==String(rv);
+    const sb=st?(st.stable?'<span class="badge b-stable">stable</span>':'<span class="badge b-var">variable</span>'):'';
+    const vals=changed
+      ?`<span class="rv-cur">${cv2}</span><span class="rv-arr">→</span><span class="rv-new">${rv}</span>${sb}`
+      :`<span class="rv-same">${rv!==undefined?rv:cv2}</span><span style="font-size:.62rem;color:var(--mt);margin-left:.35rem">unchanged</span>${sb}`;
+    rh+=`<div class="rec-row"><div class="rec-param">${p.replace('TOM_','')}</div><div class="rec-vals">${vals}</div></div>`;
+  });
+  document.getElementById('rec-rows').innerHTML=rh;
+
+  // results table
+  const oMax=Math.max(...oosArr);
+  let th='';
+  combos.forEach(c=>{
+    const d2=c.oos_score-c.is_score;
+    const dc=d2>0.001?'dp':d2<-0.001?'dn':'dz';
+    const isB=(c.is_blocks||[]).map(b=>`<span class="blk blk-is">${b}</span>`).join('');
+    const oosB=(c.oos_blocks||[]).map(b=>`<span class="blk blk-oos">${b}</span>`).join('');
+    const pt=Object.entries(c.best_params||{}).map(([k,v])=>`<span class="ptag">${k.replace('TOM_','')}=${v}</span>`).join('');
+    const oHi=Math.abs(c.oos_score-oMax)<0.0001?' hi':'';
+    th+=`<tr>
+      <td style="color:var(--lm)">${c.combo_id}</td>
+      <td>${oosB}</td><td>${isB}</td><td>${pt}</td>
+      <td><span class="chip chip-is">${c.is_score.toFixed(4)}</span></td>
+      <td><span class="chip chip-oos${oHi}">${c.oos_score.toFixed(4)}</span></td>
+      <td class="${dc}">${d2>=0?'+':''}${d2.toFixed(4)}</td>
+    </tr>`;
+  });
+  document.getElementById('result-rows').innerHTML=th;
+
+  // footer
+  document.getElementById('footer-right').textContent=`${m.K} blocks · ${m.p} OOS · ${s.n_combos_run} paths`;
+}
+
+document.getElementById('file-input').addEventListener('change',function(e){
+  const f=e.target.files[0];
+  if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{renderAll(JSON.parse(ev.target.result));}
+    catch(err){alert('Could not parse JSON: '+err.message);}
+  };
+  r.readAsText(f);
+  e.target.value='';
+});
+
+renderAll(DEMO);
+</script>
+</body>
+</html>
