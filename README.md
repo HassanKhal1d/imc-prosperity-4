@@ -1,4 +1,4 @@
-# IMC Prosperity 4 — A Quant's Journey
+# IMC Prosperity 4 — Kernel Wizards write up
 
 > **Final Rank: 934 / 18,803** (top 5%)
 > **Peak Rank: 643** (end of Round 3)
